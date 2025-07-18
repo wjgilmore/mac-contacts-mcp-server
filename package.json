@@ -1,0 +1,34 @@
+{
+      "name": "contacts-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for accessing macOS contacts database",
+  "type": "module",
+  "main": "src/index.js",
+    "bin": {
+      "contacts-mcp-server": "./src/index.js"
+    },
+    "scripts": {
+      "start": "node src/index.js",
+      "dev": "node src/index.js",
+      "test": "node test/test-contacts-server.js",
+      "test:quick": "node test/test-contacts-server.js --quick",
+      "test:startup": "node test/test-startup.js"
+    },
+    "keywords": [
+      "mcp",
+      "contacts",
+      "macos",
+      "claude"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+      "@modelcontextprotocol/sdk": "^0.5.0"
+    },
+    "engines": {
+      "node": ">=18.0.0"
+    },
+    "os": [
+      "darwin"
+    ]
+  }
