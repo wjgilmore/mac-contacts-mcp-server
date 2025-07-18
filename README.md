@@ -103,6 +103,11 @@ Once configured in Claude Desktop, you can use natural language to interact with
 - Verify your contacts database has data (check the Contacts app)
 - Try using different search terms or the `get_all_contacts` tool with a limit
 
+## Caveats
+
+* "But Apple will eventually build one macOS MCP server to rule them all." I know that but don't care. I'm a nerd and like building stuff.
+* "But Anthropic will see all of my contacts." Then don't install it.
+
 ## Development
 
 To run the server directly for testing:
