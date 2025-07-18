@@ -776,74 +776,45 @@ class ContactsServer {
   }
 
   async searchContacts(args) {
-    // Simple search using direct contact access (same pattern as get_contact_by_name)
+    // Efficient search using AppleScript's native filtering to search ENTIRE address book
     await this.checkPermissions();
     console.error(`Searching contacts with query: "${args.query || 'all'}"`);
 
-    const searchQuery = args.query ? args.query.replace(/"/g, '\\"') : "";
+    // If no query provided, get first few contacts
+    if (!args.query) {
+      const searchScript = `tell application "Contacts" to return name of people`;
+      try {
+        const result = await this.executeAppleScript(searchScript);
+        const names = result.includes(',') ?
+          result.split(',').map(name => name.trim()).filter(name => name).slice(0, 50) :
+          result.split(/[\r\n]+/).filter(name => name.trim()).slice(0, 50);
 
-    const searchScript = `
-      tell application "Contacts"
-        set matchedContacts to ""
+        console.error(`Found ${names.length} contacts`);
+        const namesList = names.map((name, index) => `${index + 1}. ${name}`).join('\n');
 
-        -- Check first 10 contacts directly (no loops to avoid timeout)
-        try
-          set name1 to name of person 1 as string
-          set match1 to false
-          ${args.query ? `if name1 contains "${searchQuery}" then set match1 to true` : 'set match1 to true'}
-          if match1 then
-            if matchedContacts is not "" then set matchedContacts to matchedContacts & return
-            set matchedContacts to matchedContacts & name1
-          end if
-        end try
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `First ${names.length} contacts:\n\n${namesList}\n\n(Searched entire address book using efficient AppleScript filtering)`
+            }
+          ]
+        };
+      } catch (error) {
+        console.error(`Contact search failed: ${error.message}`);
+        throw error;
+      }
+    }
 
-        try
-          set name2 to name of person 2 as string
-          set match2 to false
-          ${args.query ? `if name2 contains "${searchQuery}" then set match2 to true` : 'set match2 to true'}
-          if match2 then
-            if matchedContacts is not "" then set matchedContacts to matchedContacts & return
-            set matchedContacts to matchedContacts & name2
-          end if
-        end try
-
-        try
-          set name3 to name of person 3 as string
-          set match3 to false
-          ${args.query ? `if name3 contains "${searchQuery}" then set match3 to true` : 'set match3 to true'}
-          if match3 then
-            if matchedContacts is not "" then set matchedContacts to matchedContacts & return
-            set matchedContacts to matchedContacts & name3
-          end if
-        end try
-
-        try
-          set name4 to name of person 4 as string
-          set match4 to false
-          ${args.query ? `if name4 contains "${searchQuery}" then set match4 to true` : 'set match4 to true'}
-          if match4 then
-            if matchedContacts is not "" then set matchedContacts to matchedContacts & return
-            set matchedContacts to matchedContacts & name4
-          end if
-        end try
-
-        try
-          set name5 to name of person 5 as string
-          set match5 to false
-          ${args.query ? `if name5 contains "${searchQuery}" then set match5 to true` : 'set match5 to true'}
-          if match5 then
-            if matchedContacts is not "" then set matchedContacts to matchedContacts & return
-            set matchedContacts to matchedContacts & name5
-          end if
-        end try
-
-        return matchedContacts
-      end tell
-    `;
+    // Search with query using efficient whose syntax
+    const searchQuery = args.query.replace(/"/g, '\\"');
+    const searchScript = `tell application "Contacts" to return name of (every person whose name contains "${searchQuery}")`;
 
     try {
       const result = await this.executeAppleScript(searchScript);
-      const names = result.split(/[\r\n]+/).filter(name => name.trim());
+      const names = result.includes(',') ?
+        result.split(',').map(name => name.trim()).filter(name => name) :
+        result.split(/[\r\n]+/).filter(name => name.trim());
 
       console.error(`Found ${names.length} matching contacts`);
 
@@ -852,9 +823,7 @@ class ContactsServer {
           content: [
             {
               type: 'text',
-              text: args.query ?
-                `No contacts found matching "${args.query}".` :
-                `No contacts found.`
+              text: `No contacts found matching "${args.query}".`
             }
           ]
         };
@@ -866,7 +835,7 @@ class ContactsServer {
         content: [
           {
             type: 'text',
-            text: `Found ${names.length} contacts${args.query ? ` matching "${args.query}"` : ''}:\n\n${namesList}\n\n(Simplified search of first 5 contacts for fast results)`
+            text: `Found ${names.length} contacts matching "${args.query}":\n\n${namesList}\n\n(Searched entire address book using efficient AppleScript filtering)`
           }
         ]
       };
@@ -881,39 +850,12 @@ class ContactsServer {
     await this.checkPermissions();
     console.error(`Searching for contacts with name: "${args.name}"`);
 
-                const searchScript = `
-      tell application "Contacts"
-        set searchName to "${args.name.replace(/"/g, '\\"')}"
-        set matchedNames to ""
+                        // Use the working approach - search entire address book efficiently
+    const searchName = args.name.replace(/"/g, '\\"');
 
-        -- Check first 5 contacts
-        try
-          set name1 to name of person 1 as string
-          if name1 contains searchName then
-            if matchedNames is not "" then set matchedNames to matchedNames & return
-            set matchedNames to matchedNames & name1
-          end if
-        end try
-
-        try
-          set name2 to name of person 2 as string
-          if name2 contains searchName then
-            if matchedNames is not "" then set matchedNames to matchedNames & return
-            set matchedNames to matchedNames & name2
-          end if
-        end try
-
-        try
-          set name3 to name of person 3 as string
-          if name3 contains searchName then
-            if matchedNames is not "" then set matchedNames to matchedNames & return
-            set matchedNames to matchedNames & name3
-          end if
-        end try
-
-        return matchedNames
-      end tell
-    `;
+    const searchScript = args.exact_match ?
+      `tell application "Contacts" to return name of (every person whose name = "${searchName}")` :
+      `tell application "Contacts" to return name of (every person whose name contains "${searchName}")`;
 
     try {
       const result = await this.executeAppleScript(searchScript);
@@ -934,14 +876,14 @@ class ContactsServer {
 
       const namesList = names.map((name, index) => `${index + 1}. ${name}`).join('\n');
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Found ${names.length} contacts with name "${args.name}":\n\n${namesList}`
-          }
-        ]
-      };
+              return {
+          content: [
+            {
+              type: 'text',
+              text: `Found ${names.length} contacts with name "${args.name}":\n\n${namesList}\n\n(Searched entire address book using efficient AppleScript filtering)`
+            }
+          ]
+        };
     } catch (error) {
       console.error(`Name search failed: ${error.message}`);
       throw error;
