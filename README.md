@@ -1,8 +1,6 @@
 # Apple Contacts MCP Server
 
-**WARNING**: This is my first MCP server, and when you install it this thing will talk directly to your macOS Contacts App. There is to my understanding no possible way for this server to create, modify, or delete your contacts, but YMMV because this is AI.
-
-A Model Context Protocol (MCP) server that provides read-only access to your macOS contacts database using AppleScript. This server allows Claude Desktop to search and retrieve contact information including names, phone numbers, email addresses, organizations, notes, and birthdays.
+ACMS (Apple Contacts MCP Server) is a Model Context Protocol (MCP) server that provides read-only access to your macOS Contacts using AppleScript. This server allows Claude Desktop to search and retrieve contact information. At present it is read-only.
 
 ## Features
 
@@ -10,8 +8,10 @@ A Model Context Protocol (MCP) server that provides read-only access to your mac
 - **No native dependencies** - uses AppleScript through osascript command
 - **Multiple search methods**: by name or general query
 - **Flexible matching**: both exact and partial matching options
-- **Safe error handling**: clear error messages when contacts are inaccessible
-- **Works with all Node.js versions** - no compilation required
+
+## Installing ACMS on Claude Desktop
+
+To install ACMS on Claude Desktop, download the latest release from the GitHub project page, double-click the downloaded file, and follow the prompts inside Claude Desktop.
 
 ## Available Tools
 
